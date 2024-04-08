@@ -23,6 +23,12 @@ with Volume Binding Mode of `Immediate`
 either [Windows Server 2019](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019)
 or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 
+7. Namespace that is still hard coded.
+
+    ```shell
+    oc new-project chrisj
+    ```
+
 ## HTTP Server
 
 1. Get ArgoCD password and log in
