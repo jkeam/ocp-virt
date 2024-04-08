@@ -38,10 +38,6 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
     oc adm policy add-cluster-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n httpd-server
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n openshift-storage
-
-    # I also had to create a new ClusterRole for the argocd user
-    oc create -f ./argocd/gitops-vms-clusterrole.yaml
-    oc create -f ./argocd/gitops-vms-clusterrolebinding.yaml
     ```
 
 2. Get ArgoCD password and log in
