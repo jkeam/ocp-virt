@@ -1,0 +1,62 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: windows-10-vm
+  namespace: chrisj
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: windows-10-vm-root
+      spec:
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+        source:
+          pvc:
+            name: windows-10-base-lfr6r
+            namespace: chrisj
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: windows-10-vm
+    spec:
+      domain:
+        cpu:
+          sockets: 2
+          cores: 1
+          threads: 1
+        resources:
+          requests:
+            memory: 8Gi
+        devices:
+          disks:
+            - name: rootdisk
+              bootOrder: 1
+              disk:
+                bus: virtio
+            - name: virtiocontainerdisk
+              cdrom:
+                bus: sata
+          interfaces:
+            - bridge: {}
+              name: default
+          inputs:
+            - type: tablet
+              bus: usb
+              name: tablet
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: windows-10-vm-root
+        - name: virtiocontainerdisk
+          containerDisk:
+            image: kubevirt/virtio-container-disk

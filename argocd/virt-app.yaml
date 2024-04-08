@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openshift-virt
+spec:
+  destination:
+    name: ''
+    namespace: openshift-gitops
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: components/operators/virtualization-operator/aggregate/default
+    repoURL: 'https://github.com/OOsemka/gitops-acm1.git'
+    targetRevision: HEAD
+  sources: []
+  project: default
