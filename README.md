@@ -31,20 +31,33 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 
 ## HTTP Server
 
-1. Get ArgoCD password and log in
+1. Setup permissions
+
+    ```shell
+    # argocd permissions
+    oc adm policy add-cluster-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller
+    oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n httpd-server
+    oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n openshift-storage
+
+    # I also had to create a new ClusterRole for the argocd user
+    oc create -f ./argocd/gitops-vms-clusterrole.yaml
+    oc create -f ./argocd/gitops-vms-clusterrolebinding.yaml
+    ```
+
+2. Get ArgoCD password and log in
 
     ```shell
     oc extract secrets/openshift-gitops-cluster -n openshift-gitops --keys=admin.password --to -
     ```
 
-2. Create App
+3. Create App
 
     ```shell
     # wait 10 min
     oc create -f ./argocd/httpd-app.yaml
     ```
 
-3. Upload ISO to httpd server
+4. Upload ISO to httpd server
 
     ```shell
     # wait 10 min
