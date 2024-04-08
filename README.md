@@ -19,9 +19,7 @@ with Volume Binding Mode of `Immediate`
     oc apply -f ./awsloadbalancercontroller.yaml
     ```
 
-6. Download Windows ISO,
-either [Windows Server 2019](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019)
-or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
+6. Download [Windows 10 ISO](https://www.microsoft.com/en-us/software-download/windows10ISO) and name it `win.iso`
 
 ## HTTP Server
 
@@ -127,3 +125,11 @@ and enable remote desktop connection
 1. [Main reference](https://docs.google.com/document/d/1T_IxWWDcVLzaHbb46sPiMV8ieOiCg-9F0xkp67fpePo/edit)
 
 2. [Upstream docs](https://kubevirt.io/2021/Automated-Windows-Installation-With-Tekton-Pipelines.html)
+
+3. [Windows Customize Pipeline](https://github.com/kubevirt/kubevirt-tekton-tasks/tree/main/release/pipelines/windows-customize)
+
+4. [Fancy Windows Auto Unattended XML that installs SQL Server and VS Code](https://github.com/kubevirt/kubevirt-tekton-tasks/blob/main/release/pipelines/windows-customize/configmaps/windows-customize-configmaps.yaml)
+
+5. [Execute in VM](https://kubevirt.io/user-guide/virtual_machines/tekton_tasks/#execute-commands-in-virtual-machines)
+
+6. [Windows Server 2019 ISO](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019) - If you use this, you will need a new auto unattended.xml file as the one in this demo only works with Windows 10
