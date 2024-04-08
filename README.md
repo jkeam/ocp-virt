@@ -23,12 +23,6 @@ with Volume Binding Mode of `Immediate`
 either [Windows Server 2019](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019)
 or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 
-7. Namespace that is still hard coded.
-
-    ```shell
-    oc new-project chrisj
-    ```
-
 ## HTTP Server
 
 1. Setup permissions
@@ -57,12 +51,12 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 
     ```shell
     # wait 10 min
-    ISO_FILE=/Users/jkeam/dev/images/Win10_22H2_English_x64v1.iso
+    ISO_FILE=./win.iso  # assuming iso is named win.iso
     POD_NAME=$(oc get pods --selector=app=httpd-server -o jsonpath='{.items[0].metadata.name}' -n httpd-server)
     oc cp $ISO_FILE $POD_NAME:/opt/app-root/src -n httpd-server
 
     # ISO link becomes
-    # http://httpd-server.httpd-server.svc.cluster.local:8080/Win10_22H2_English_x64v1.iso
+    # http://httpd-server.httpd-server.svc.cluster.local:8080/win.iso
     ```
 
 ## GitOps
@@ -75,7 +69,7 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 
 ## Pipeline
 
-1. Configure GitOps rbac
+1. Configure GitOps RBAC
 
     ```shell
     git clone git@github.com:OOsemka/gitops-acm1.git
@@ -92,21 +86,22 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 3. Create configmap for auto unattended config
 
     ```shell
-    oc apply -f https://raw.githubusercontent.com/OOsemka/tekton-windows-pipeline/main/windows10autounattend.yaml
+    # make sure you're in the chrisj project
+    oc apply -f https://raw.githubusercontent.com/jkeam/tekton-windows-pipeline/main/windows10autounattend.yaml
     ```
 
 4. Create pipeline tasks
 
     ```shell
     VERSION=$(curl -s https://api.github.com/repos/kubevirt/kubevirt-tekton-tasks/releases | jq '.[] | select(.prerelease==false) | .tag_name' | sort -V | tail -n1 | tr -d '"')
-    kubectl apply -f "https://github.com/kubevirt/kubevirt-tekton-tasks/releases/download/${VERSION}/kubevirt-tekton-tasks.yaml"
+    oc apply -f "https://github.com/kubevirt/kubevirt-tekton-tasks/releases/download/${VERSION}/kubevirt-tekton-tasks.yaml"
     ```
 
 5. Create pipeline
 
     ```shell
     # wait 10 min
-    oc apply -f https://raw.githubusercontent.com/OOsemka/tekton-windows-pipeline/main/windows10pipeline-fixed.yaml
+    oc apply -f https://raw.githubusercontent.com/jkeam/tekton-windows-pipeline/main/windows10pipeline-fixed.yaml
     ```
 
 6. Trigger the pipeline
