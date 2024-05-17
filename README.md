@@ -63,12 +63,14 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 
 ## RHEL9 GitOps
 
-Create RHEL9 VM in `chrisj` project
+There is no pipeline for this yet, but we can demonstrate using ArgoCD to
+create a RHEL VM.
 
 ```shell
 oc create -f ./argocd/vms-app.yaml
-# username: redhat
-# password: 8etj2bea5fJ9
+# project: chrisj
+# login username: redhat
+# login password: 8etj2bea5fJ9
 # also check secret/authorized-keys for ssh key for passwordless login
   # currently set to my public key
   # https://github.com/jkeam/kubevirt-gitops/blob/odf/vms/base/secret.yaml
@@ -76,12 +78,16 @@ oc create -f ./argocd/vms-app.yaml
 
 ## Pipeline
 
+We will now setup a pipeline that can build a Windows Golden Image
+in the form of a Data Volume that can be cloned for every new VM we want to
+create.
+
 1. Configure GitOps RBAC
 
     ```shell
     git clone git@github.com:OOsemka/gitops-acm1.git
     cd ./gitops-acm1/components/operators/openshift-gitops/instance/overlays/default
-    oc create -k .
+    oc create -k .  # after done, cd back to the ocp-virt repo home
     ```
 
 2. Create configmap for auto unattended config
@@ -107,7 +113,6 @@ oc create -f ./argocd/vms-app.yaml
 4. Create pipeline
 
     ```shell
-    # wait 10 min
     oc apply -f ./pipeline/windows10.yaml
     ```
 
@@ -129,6 +134,7 @@ in your fork to match your PVC name and check that into GitHub.
 3. Create the ArgoCD Application
 
     ```shell
+    # make sure to update the repoURL to point to your fork
     oc create -f ./argocd/windows-vms-app.yaml
     ```
 
