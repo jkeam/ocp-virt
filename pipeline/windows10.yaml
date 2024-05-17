@@ -5,7 +5,7 @@ metadata:
   namespace: chrisj
 spec:
   params:
-    - default: '<get the windows iso in here>'
+    - default: 'http://httpd-server.httpd-server.svc.cluster.local:8080/Win10_22H2_English_x64v1.iso'
       name: winImageDownloadURL
       type: string
     - default: windows-10-autounattend
