@@ -4,8 +4,7 @@
 
 Test on v4.14 and will most likely work on 4.13 and 4.15.
 
-1. OpenShift Cluster with Bare Metal Worker and Default Storage Class
-with Volume Binding Mode of `Immediate`
+1. OpenShift Cluster with Bare Metal Worker and ODF installed
 
 2. OpenShift GitOps
 
