@@ -64,7 +64,7 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 
 ## GitOps
 
-1. Create RHEL9 VM
+1. Create RHEL9 VM in `chrisj` project
 
     ```shell
     oc create -f ./argocd/vms-app.yaml
