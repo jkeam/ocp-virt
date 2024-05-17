@@ -13,7 +13,7 @@ spec:
   source:
     path: httpd-server/overlays/default
     repoURL: https://github.com/jkeam/kubevirt-gitops.git
-    targetRevision: rosa
+    targetRevision: odf
   syncPolicy:
     automated: {}
     syncOptions:

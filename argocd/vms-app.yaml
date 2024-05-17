@@ -13,7 +13,7 @@ spec:
   source:
     path: vms/overlays/openshift
     repoURL: https://github.com/jkeam/kubevirt-gitops.git
-    targetRevision: rosa
+    targetRevision: odf
   syncPolicy:
     automated: {}
     syncOptions:
