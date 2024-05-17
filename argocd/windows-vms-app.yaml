@@ -14,5 +14,3 @@ spec:
     path: windows
     repoURL: https://github.com/jkeam/ocp-virt-windows-gitops
     targetRevision: main
-    kustomize:
-      version: v3.5.4
