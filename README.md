@@ -61,18 +61,18 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
     # http://httpd-server.httpd-server.svc.cluster.local:8080/win.iso
     ```
 
-## GitOps
+## RHEL9 GitOps
 
-1. Create RHEL9 VM in `chrisj` project
+Create RHEL9 VM in `chrisj` project
 
-    ```shell
-    oc create -f ./argocd/vms-app.yaml
-    # username: redhat
-    # password: 8etj2bea5fJ9
-    # also check secret/authorized-keys for ssh key for passwordless login
-      # currently set to my public key
-      # https://github.com/jkeam/kubevirt-gitops/blob/odf/vms/base/secret.yaml
-    ```
+```shell
+oc create -f ./argocd/vms-app.yaml
+# username: redhat
+# password: 8etj2bea5fJ9
+# also check secret/authorized-keys for ssh key for passwordless login
+  # currently set to my public key
+  # https://github.com/jkeam/kubevirt-gitops/blob/odf/vms/base/secret.yaml
+```
 
 ## Pipeline
 
@@ -111,22 +111,28 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
     oc apply -f ./pipeline/windows10.yaml
     ```
 
-5. Trigger the pipeline, set `winImageDownloadURL` to your iso name. Also pipeline takes ~30min to run.
+5. Trigger the pipeline, set `winImageDownloadURL` to your iso name.
+Also pipeline takes ~30min to run.
 
-6. Create Windows VM
+## Windows GitOps
+
+1. Fork the [Windows Repo](https://github.com/jkeam/ocp-virt-windows-gitops)
+
+2. Update the [PVC](https://github.com/jkeam/ocp-virt-windows-gitops/blob/main/windows/kustomization.yaml#L32)
+in your fork to match your PVC name and check that into GitHub.
 
     ```shell
-    oc create -k ./windows
+    # to get your PVC name
+    oc get pvc -o name -n chrisj | grep windows-10-base | sed 's/persistentvolumeclaim\///g'
     ```
 
-7. Start VM
+3. Create the ArgoCD Application
 
     ```shell
-    # use the OCP Web Console or the cli below
-    virtctl start windows-10-vm
+    oc create -f ./argocd/windows-vms-app.yaml
     ```
 
-8. Use OCP Web Console to connect to console 'changepassword'
+4. Use OCP Web Console to connect to console 'changepassword'
 and enable remote desktop connection
 
 ## Links
