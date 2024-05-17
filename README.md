@@ -111,7 +111,7 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
     oc apply -f ./pipeline/windows10.yaml
     ```
 
-5. Trigger the pipeline, set `winImageDownloadURL` to `http://httpd-server.httpd-server.svc.cluster.local:8080/Win10_22H2_English_x64v1.iso`, making sure to replace with your actual iso name
+5. Trigger the pipeline, set `winImageDownloadURL` to your iso name. Also pipeline takes ~30min to run.
 
 6. Create Windows VM
 
