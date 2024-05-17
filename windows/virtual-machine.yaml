@@ -12,10 +12,11 @@ spec:
       spec:
         pvc:
           accessModes:
-            - ReadWriteOnce
+            - ReadWriteMany
           resources:
             requests:
               storage: 20Gi
+          storageClassName: ocs-storagecluster-cephfs
         source:
           pvc:
             name: windows-10-base-lfr6r
