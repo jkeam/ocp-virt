@@ -20,6 +20,13 @@ patches:
           metadata:
             name: windows-10-vm-root
           spec:
+            pvc:
+              accessModes:
+                - ReadWriteMany
+              resources:
+                requests:
+                  storage: 20Gi
+              storageClassName: ocs-storagecluster-cephfs
             source:
               pvc:
                 name: windows-10-base-l6bxm
