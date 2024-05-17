@@ -2,7 +2,6 @@ kind: Service
 apiVersion: v1
 metadata:
   name: windows-10-vm
-  namespace: chrisj
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-type: external
     service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: instance
