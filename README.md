@@ -68,6 +68,11 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
 
     ```shell
     oc create -f ./argocd/vms-app.yaml
+    # username: redhat
+    # password: 8etj2bea5fJ9
+    # also check secret/authorized-keys for ssh key for passwordless login
+      # currently set to my public key
+      # https://github.com/jkeam/kubevirt-gitops/blob/odf/vms/base/secret.yaml
     ```
 
 ## Pipeline
@@ -80,10 +85,10 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
     oc create -k .
     ```
 
-2. Create project all this will live in
+2. Create configmap for auto unattended config
 
     ```shell
-    oc new-project chrisj
+    oc create -f ./pipeline/windows10autounattend.yaml
     ```
 
 3. Create configmap for auto unattended config
@@ -100,29 +105,29 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
     oc apply -f "https://github.com/kubevirt/kubevirt-tekton-tasks/releases/download/${VERSION}/kubevirt-tekton-tasks.yaml"
     ```
 
-5. Create pipeline
+4. Create pipeline
 
     ```shell
     # wait 10 min
-    oc apply -f https://raw.githubusercontent.com/jkeam/tekton-windows-pipeline/main/windows10pipeline-fixed.yaml
+    oc apply -f ./pipeline/windows10.yaml
     ```
 
-6. Trigger the pipeline
+5. Trigger the pipeline, set `winImageDownloadURL` to `http://httpd-server.httpd-server.svc.cluster.local:8080/Win10_22H2_English_x64v1.iso`, making sure to replace with your actual iso name
 
-7. Create Windows VM
+6. Create Windows VM
 
     ```shell
     oc create -k ./windows
     ```
 
-8. Start VM
+7. Start VM
 
     ```shell
     # use the OCP Web Console or the cli below
     virtctl start windows-10-vm
     ```
 
-9. Use OCP Web Console to connect to console 'changepassword'
+8. Use OCP Web Console to connect to console 'changepassword'
 and enable remote desktop connection
 
 ## Links
