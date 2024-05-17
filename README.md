@@ -13,13 +13,15 @@ with Volume Binding Mode of `Immediate`
 
 4. OpenShift Virtualization with HyperConverged App
 
-5. Aws Load Balancer Operator with
+5. Download Windows ISO,
+either [Windows Server 2019](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019)
+or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
+
+6. Namespace that is still hard coded.
 
     ```shell
-    oc apply -f ./awsloadbalancercontroller.yaml
+    oc new-project chrisj
     ```
-
-6. Download [Windows 10 ISO](https://www.microsoft.com/en-us/software-download/windows10ISO) and name it `win.iso`
 
 ## HTTP Server
 
