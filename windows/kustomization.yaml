@@ -20,4 +20,4 @@ patches:
           spec:
             source:
               pvc:
-                name: windows-10-base-lfr6r
+                name: windows-10-base-l6bxm
