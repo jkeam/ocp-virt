@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  name: windows-vms
+  namespace: openshift-gitops
+spec:
+  destination:
+    namespace: chrisj
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: windows
+    repoURL: https://github.com/jkeam/ocp-virt-windows-gitops
+    targetRevision: main
+    kustomize:
+      version: v3.5.4
