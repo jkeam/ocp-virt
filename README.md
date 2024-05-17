@@ -32,6 +32,9 @@ or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
     oc adm policy add-cluster-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n httpd-server
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n openshift-storage
+
+    # scc
+    oc create -f ./argocd/scc.yaml
     ```
 
 2. Get ArgoCD password and log in
