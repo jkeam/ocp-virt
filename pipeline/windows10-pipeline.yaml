@@ -5,11 +5,15 @@ metadata:
   namespace: chrisj
 spec:
   params:
-    - default: 'http://httpd-server.httpd-server.svc.cluster.local:8080/Win10_22H2_English_x64v1.iso'
-      name: winImageDownloadURL
+    - name: WIN_IMAGE_DL_URL
       type: string
     - default: windows-10-autounattend
-      name: autounattendConfigMapName
+      name: AUTOUNATTEND_CM_NAME
+      type: string
+    - name: GIT_REPOSITORY
+      type: string
+    - default: 'main'
+      name: GIT_REF
       type: string
   tasks:
     - name: create-source-dv
@@ -30,7 +34,7 @@ spec:
                 volumeMode: Filesystem
               source:
                 http:
-                  url: $(params.winImageDownloadURL)
+                  url: $(params.WIN_IMAGE_DL_URL)
         - name: namespace
           value: chrisj
         - name: waitForSuccess
@@ -145,7 +149,7 @@ spec:
                     - name: sysprepconfig
                       sysprep:
                         configMap:
-                          name: $(params.autounattendConfigMapName)
+                          name: $(params.AUTOUNATTEND_CM_NAME)
         - name: virtctl
           value: ''
         - name: namespace
@@ -200,3 +204,21 @@ spec:
       taskRef:
         kind: Task
         name: cleanup-vm
+    - name: git-update-deployment
+      params:
+        - name: GIT_REPOSITORY
+          value: $(params.GIT_REPOSITORY)
+        - name: GIT_REF
+          value: $(params.GIT_REF)
+        - name: PVC_NAME
+          value: $(tasks.create-base-dv.results.name)
+      runAfter:
+        - cleanup-vm
+      taskRef:
+        kind: Task
+        name: git-update-deployment
+      workspaces:
+        - name: workspace
+          workspace: app-source
+  workspaces:
+    - name: app-source
