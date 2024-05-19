@@ -13,7 +13,7 @@ spec:
     - name: AUTOUNATTEND_CM_NAME
       value: windows-10-autounattend
     - name: GIT_REPOSITORY
-      value: 'https://github.com/jkeam/ocp-virt-windows-gitops.git'
+      value: 'https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git'
     - name: GIT_REF
       value: main
   pipelineRef:

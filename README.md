@@ -2,10 +2,10 @@
 
 ## Prerequisite
 
-Test on v4.14 and will most likely work on 4.13 and 4.15.
+Tested on OpenShift 4.14 and will most likely work on 4.13 and 4.15.
 The OCP Virt Roadshow cluster is a great cluster to use for this
 as you will have most of the below already setup for you.
-I actually used that workshop to develop a lot of this content.
+I actually used that cluster myself to develop a lot of this content.
 
 1. OpenShift Cluster with Bare Metal Worker and ODF installed
 
@@ -49,7 +49,7 @@ giving permissions to commit changes
 
     # pipeline permissions
     oc create -f ./argocd/secret.yaml
-    oc edit sa/pipeline  # add secret named git-secret
+    oc edit sa/pipeline  # add `- name: git-secret` to secrets
     ```
 
 2. Get ArgoCD password and log in
@@ -61,20 +61,20 @@ giving permissions to commit changes
 3. Create App
 
     ```shell
-    # wait 10 min
     oc create -f ./argocd/httpd-app.yaml
+    # wait ~10 min for completion
     ```
 
 4. Upload ISO to httpd server
 
     ```shell
-    # wait 10 min
-    ISO_FILE=./win.iso  # assuming iso is named win.iso
+    ISO_FILE=./win10.iso  # assuming iso is named win10.iso
     POD_NAME=$(oc get pods --selector=app=httpd-server -o jsonpath='{.items[0].metadata.name}' -n httpd-server)
     oc cp $ISO_FILE $POD_NAME:/opt/app-root/src -n httpd-server
+    # wait ~10 min for completion
 
     # ISO link becomes
-    # http://httpd-server.httpd-server.svc.cluster.local:8080/win.iso
+    # http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
     ```
 
 ## RHEL9 GitOps
@@ -95,7 +95,7 @@ oc create -f ./argocd/vms-app.yaml
 ## Pipeline
 
 We will now setup a pipeline that can build a Windows Golden Image
-in the form of a Data Volume that can be cloned for every new VM we want to
+in the form of a PVC that can be cloned for every new VM we want to
 create.
 
 1. Configure GitOps RBAC
@@ -112,20 +112,13 @@ create.
     oc create -f ./pipeline/windows10autounattend.yaml
     ```
 
-3. Create configmap for auto unattended config
-
-    ```shell
-    # make sure you're in the chrisj project
-    oc apply -f https://raw.githubusercontent.com/jkeam/tekton-windows-pipeline/main/windows10autounattend.yaml
-    ```
-
-4. Create pipeline tasks
+3. Create pipeline tasks
 
     ```shell
     VERSION=$(curl -s https://api.github.com/repos/kubevirt/kubevirt-tekton-tasks/releases | jq '.[] | select(.prerelease==false) | .tag_name' | sort -V | tail -n1 | tr -d '"')
     oc apply -f "https://github.com/kubevirt/kubevirt-tekton-tasks/releases/download/${VERSION}/kubevirt-tekton-tasks.yaml"
 
-    # add custom task
+    # custom task
     oc create -f ./pipeline/git-update-deployment-task.yaml
     ```
 
@@ -135,9 +128,11 @@ create.
     oc apply -f ./pipeline/windows10-pipeline.yaml
     ```
 
-5. Trigger the pipeline, setting `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params
+5. Trigger the pipeline, setting `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params first
 
     ```shell
+    # WIN_IMAGE_DL_URL: http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
+    # GIT_REPOSITORY: https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git
     oc create -f ./pipeline/windows10-pipelinerun.yaml
     # wait ~30min for completion
     ```
@@ -150,10 +145,10 @@ and see the PVC on line 21 matches
 
 ## Windows GitOps
 
-1. Create the ArgoCD Application
+1. Create the ArgoCD Application, setting the `repoURL` first
 
     ```shell
-    # make sure to update the repoURL to point to your of fork of ocp-virt-windows-gitops
+    # repoURL: https://github.com/YOUR_NAME/ocp-virt-windows-gitops
     oc create -f ./argocd/windows-vms-app.yaml
     ```
 
@@ -163,14 +158,16 @@ and see the PVC on line 21 matches
 
 1. Make some changes to the Windows Golden Image in the `configmap/windows-10-autounattend`
 
-2. Trigger the pipeline, setting `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params
+2. Trigger the pipeline, making sure `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params are set
 
     ```shell
+    # WIN_IMAGE_DL_URL: http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
+    # GIT_REPOSITORY: https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git
     oc create -f ./pipeline/windows10-pipelinerun.yaml
     # wait ~30min for completion
     ```
 
-3. Stop and destroy currently running VM `windows-10-vm`, this takes a few min
+3. Stop and destroy currently running VM `windows-10-vm`, wait a few min for completion
 
 4. Manually `Sync` in ArgoCD to create new VM off new golden image
 
