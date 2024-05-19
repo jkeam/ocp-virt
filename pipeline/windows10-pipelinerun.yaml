@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: windows-installer-
+  namespace: chrisj
+  labels:
+    tekton.dev/pipeline: windows-installer
+spec:
+  serviceAccountName: pipeline
+  params:
+    - name: WIN_IMAGE_DL_URL
+      value: 'http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso'
+    - name: AUTOUNATTEND_CM_NAME
+      value: windows-10-autounattend
+    - name: GIT_REPOSITORY
+      value: 'https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git'
+    - name: GIT_REF
+      value: main
+  pipelineRef:
+    name: windows-installer
+  workspaces:
+    - name: app-source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 500Mi
+  timeouts:
+    pipeline: 1h0m0s

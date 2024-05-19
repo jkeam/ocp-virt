@@ -2,10 +2,12 @@
 
 ## Prerequisite
 
-Test on v4.14 and will most likely work on 4.13 and 4.15.
+Tested on OpenShift 4.14 and will most likely work on 4.13 and 4.15.
+The OCP Virt Roadshow cluster is a great cluster to use for this
+as you will have most of the below already setup for you.
+I actually used that cluster myself to develop a lot of this content.
 
-1. OpenShift Cluster with Bare Metal Worker and Default Storage Class
-with Volume Binding Mode of `Immediate`
+1. OpenShift Cluster with Bare Metal Worker and ODF installed
 
 2. OpenShift GitOps
 
@@ -13,13 +15,24 @@ with Volume Binding Mode of `Immediate`
 
 4. OpenShift Virtualization with HyperConverged App
 
-5. Aws Load Balancer Operator with
+5. Download Windows ISO,
+either [Windows Server 2019](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019)
+or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
+
+## Setup
+
+1. Fork the [Windows Repo](https://github.com/jkeam/ocp-virt-windows-gitops)
+
+2. Create a GitHub Personal Access Token (PAT) for it,
+giving permissions to commit changes
+
+3. Update `./argocd/secret.yaml` with your PAT information
+
+4. Create namespace where VMs will go
 
     ```shell
-    oc apply -f ./awsloadbalancercontroller.yaml
+    oc new-project chrisj
     ```
-
-6. Download [Windows 10 ISO](https://www.microsoft.com/en-us/software-download/windows10ISO) and name it `win.iso`
 
 ## HTTP Server
 
@@ -30,6 +43,13 @@ with Volume Binding Mode of `Immediate`
     oc adm policy add-cluster-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n httpd-server
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n openshift-storage
+
+    # scc
+    oc create -f ./argocd/scc.yaml
+
+    # pipeline permissions
+    oc create -f ./argocd/secret.yaml
+    oc edit sa/pipeline  # add `- name: git-secret` to secrets
     ```
 
 2. Get ArgoCD password and log in
@@ -41,84 +61,115 @@ with Volume Binding Mode of `Immediate`
 3. Create App
 
     ```shell
-    # wait 10 min
     oc create -f ./argocd/httpd-app.yaml
+    # wait ~10 min for completion
     ```
 
 4. Upload ISO to httpd server
 
     ```shell
-    # wait 10 min
-    ISO_FILE=./win.iso  # assuming iso is named win.iso
+    ISO_FILE=./win10.iso  # assuming iso is named win10.iso
     POD_NAME=$(oc get pods --selector=app=httpd-server -o jsonpath='{.items[0].metadata.name}' -n httpd-server)
     oc cp $ISO_FILE $POD_NAME:/opt/app-root/src -n httpd-server
+    # wait ~10 min for completion
 
     # ISO link becomes
-    # http://httpd-server.httpd-server.svc.cluster.local:8080/win.iso
+    # http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
     ```
 
-## GitOps
+## RHEL9 GitOps
 
-1. Create RHEL9 VM
+There is no pipeline for this yet, but we can demonstrate using ArgoCD to
+create a RHEL VM.
 
-    ```shell
-    oc create -f ./argocd/vms-app.yaml
-    ```
+```shell
+oc create -f ./argocd/vms-app.yaml
+# project: chrisj
+# login username: redhat
+# login password: 8etj2bea5fJ9
+# also check secret/authorized-keys for ssh key for passwordless login
+  # currently set to my public key
+  # https://github.com/jkeam/kubevirt-gitops/blob/odf/vms/base/secret.yaml
+```
 
 ## Pipeline
+
+We will now setup a pipeline that can build a Windows Golden Image
+in the form of a PVC that can be cloned for every new VM we want to
+create.
 
 1. Configure GitOps RBAC
 
     ```shell
     git clone git@github.com:OOsemka/gitops-acm1.git
     cd ./gitops-acm1/components/operators/openshift-gitops/instance/overlays/default
-    oc create -k .
+    oc create -k .  # after done, cd back to the ocp-virt repo home
     ```
 
-2. Create project all this will live in
+2. Create configmap for auto unattended config
 
     ```shell
-    oc new-project chrisj
+    oc create -f ./pipeline/windows10autounattend.yaml
     ```
 
-3. Create configmap for auto unattended config
-
-    ```shell
-    # make sure you're in the chrisj project
-    oc apply -f https://raw.githubusercontent.com/jkeam/tekton-windows-pipeline/main/windows10autounattend.yaml
-    ```
-
-4. Create pipeline tasks
+3. Create pipeline tasks
 
     ```shell
     VERSION=$(curl -s https://api.github.com/repos/kubevirt/kubevirt-tekton-tasks/releases | jq '.[] | select(.prerelease==false) | .tag_name' | sort -V | tail -n1 | tr -d '"')
     oc apply -f "https://github.com/kubevirt/kubevirt-tekton-tasks/releases/download/${VERSION}/kubevirt-tekton-tasks.yaml"
+
+    # custom task
+    oc create -f ./pipeline/git-update-deployment-task.yaml
     ```
 
-5. Create pipeline
+4. Create pipeline
 
     ```shell
-    # wait 10 min
-    oc apply -f https://raw.githubusercontent.com/jkeam/tekton-windows-pipeline/main/windows10pipeline-fixed.yaml
+    oc apply -f ./pipeline/windows10-pipeline.yaml
     ```
 
-6. Trigger the pipeline
-
-7. Create Windows VM
+5. Trigger the pipeline, setting `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params first
 
     ```shell
-    oc create -k ./windows
+    # WIN_IMAGE_DL_URL: http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
+    # GIT_REPOSITORY: https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git
+    oc create -f ./pipeline/windows10-pipelinerun.yaml
+    # wait ~30min for completion
     ```
 
-8. Start VM
+6. Check to see a PVC named `windows-10-base-xxxx` was created
+
+7. Check the repo at
+`https://github.com/YOUR_NAME/ocp-virt-windows-gitops/blob/main/windows/patch.yaml`
+and see the PVC on line 21 matches
+
+## Windows GitOps
+
+1. Create the ArgoCD Application, setting the `repoURL` first
 
     ```shell
-    # use the OCP Web Console or the cli below
-    virtctl start windows-10-vm
+    # repoURL: https://github.com/YOUR_NAME/ocp-virt-windows-gitops
+    oc create -f ./argocd/windows-vms-app.yaml
     ```
 
-9. Use OCP Web Console to connect to console 'changepassword'
-and enable remote desktop connection
+2. Use OCP Web Console to login as `Administrator` and password `changepassword`
+
+## Stamping out New Windows Images
+
+1. Make some changes to the Windows Golden Image in the `configmap/windows-10-autounattend`
+
+2. Trigger the pipeline, making sure `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params are set
+
+    ```shell
+    # WIN_IMAGE_DL_URL: http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
+    # GIT_REPOSITORY: https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git
+    oc create -f ./pipeline/windows10-pipelinerun.yaml
+    # wait ~30min for completion
+    ```
+
+3. Stop and destroy currently running VM `windows-10-vm`, wait a few min for completion
+
+4. Manually `Sync` in ArgoCD to create new VM off new golden image
 
 ## Links
 

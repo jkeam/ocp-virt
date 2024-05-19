@@ -1,0 +1,67 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: git-update-deployment
+  namespace: chrisj
+  labels:
+    app.kubernetes.io/version: '0.2'
+    operator.tekton.dev/provider-type: community
+spec:
+  description: >-
+    This Task can be used to update image digest in a Git repo using kustomize.
+    It requires a secret with credentials for accessing the git repo.
+  params:
+    - name: GIT_REPOSITORY
+      type: string
+    - name: GIT_REF
+      type: string
+    - name: PVC_NAME
+      type: string
+  results:
+    - description: The commit SHA
+      name: commit
+      type: string
+  steps:
+    - image: 'docker.io/alpine/git:v2.26.2'
+      name: git-clone
+      resources: {}
+      script: >
+        rm -rf git-update-digest-workdir
+
+        git clone $(params.GIT_REPOSITORY) -b $(params.GIT_REF) git-update-digest-workdir
+      workingDir: $(workspaces.workspace.path)
+    - image: 'docker.io/mikefarah/yq:4@sha256:34f1d11ad51dc4639fc6d8dd5ade019fe57cf6084bb6a99a2f11ea522906033b'
+      name: replace-pvc
+      resources: {}
+      script: |
+        cd git-update-digest-workdir/windows
+        /usr/bin/yq --version
+        /usr/bin/yq eval -i '.spec.dataVolumeTemplates[0].spec.source.pvc.name = "$(params.PVC_NAME)"' patch.yaml
+      workingDir: $(workspaces.workspace.path)
+    - image: 'docker.io/alpine/git:v2.26.2'
+      name: git-commit
+      resources: {}
+      script: |
+        cd git-update-digest-workdir
+
+        git config user.email "tektonbot@redhat.com"
+        git config user.name "My Tekton Bot"
+
+        git status
+        git add ./windows/patch.yaml
+        git commit -m "[ci] Image digest updated"
+
+        git push
+
+        RESULT_SHA="$(git rev-parse HEAD | tr -d '\n')"
+        EXIT_CODE="$?"
+        if [ "$EXIT_CODE" != 0 ]
+        then
+          exit $EXIT_CODE
+        fi
+        # Make sure we don't add a trailing newline to the result!
+        echo -n "$RESULT_SHA" > $(results.commit.path)
+      workingDir: $(workspaces.workspace.path)
+  workspaces:
+    - description: The workspace
+      name: workspace
