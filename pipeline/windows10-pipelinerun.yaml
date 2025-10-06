@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   generateName: windows-installer-
-  namespace: chrisj
+  namespace: vms
   labels:
     tekton.dev/pipeline: windows-installer
 spec:

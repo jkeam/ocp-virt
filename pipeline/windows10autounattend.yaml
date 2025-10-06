@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: windows-10-autounattend
-  namespace: chrisj
+  namespace: vms
 data:
   Autounattend.xml: |
     <?xml version="1.0" encoding="utf-8"?>

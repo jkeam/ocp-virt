@@ -7,7 +7,7 @@ metadata:
   namespace: openshift-gitops
 spec:
   destination:
-    namespace: chrisj
+    namespace: vms
     server: https://kubernetes.default.svc
   project: default
   source:

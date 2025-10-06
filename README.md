@@ -31,7 +31,7 @@ giving permissions to commit changes
 4. Create namespace where VMs will go
 
     ```shell
-    oc new-project chrisj
+    oc new-project vms
     ```
 
 ## HTTP Server
@@ -84,7 +84,7 @@ create a RHEL VM.
 
 ```shell
 oc create -f ./argocd/vms-app.yaml
-# project: chrisj
+# project: vms
 # login username: redhat
 # login password: 8etj2bea5fJ9
 # also check secret/authorized-keys for ssh key for passwordless login

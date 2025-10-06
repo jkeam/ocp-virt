@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: windows-installer
-  namespace: chrisj
+  namespace: vms
 spec:
   params:
     - name: WIN_IMAGE_DL_URL
@@ -36,7 +36,7 @@ spec:
                 http:
                   url: $(params.WIN_IMAGE_DL_URL)
         - name: namespace
-          value: chrisj
+          value: vms
         - name: waitForSuccess
           value: 'true'
         - name: allowReplace
@@ -69,7 +69,7 @@ spec:
               source:
                 blank: {}
         - name: namespace
-          value: chrisj
+          value: vms
         - name: waitForSuccess
           value: 'true'
         - name: allowReplace
