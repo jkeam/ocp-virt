@@ -78,6 +78,15 @@ giving permissions to commit changes to the repo above
     # http://httpd-server.cluster-services.svc.cluster.local:8080/win10.iso
     ```
 
+5. Create DataVolumes
+
+    ```shell
+    # update ./datavolumes/win10source.yaml with your Win10 iso name
+    oc create -f ./datavolumes/win10source.yaml -n vms
+    # update ./datavolumes/win11source.yaml with your Win11 iso name
+    oc create -f ./datavolumes/win11source.yaml -n vms
+    ```
+
 ## RHEL9 GitOps
 
 There is no pipeline for this yet, but we can demonstrate using ArgoCD to
@@ -110,7 +119,7 @@ create.
 2. Create configmap for auto unattended config
 
     ```shell
-    oc create -f ./pipeline/windows10autounattend.yaml
+    oc create -f ./configmaps/windows10autounattend.yaml
     ```
 
 3. Create pipeline tasks
