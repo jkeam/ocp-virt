@@ -2,12 +2,11 @@
 
 ## Prerequisite
 
-Tested on OpenShift 4.14 and will most likely work on 4.13 and 4.15.
-The OCP Virt Roadshow cluster is a great cluster to use for this
-as you will have most of the below already setup for you.
-I actually used that cluster myself to develop a lot of this content.
+Tested on OpenShift 4.18.
+The Experience OpenShift Virtualization Roadshow cluster is what this is tested on.
+It will also have all of the prerequisite already installed for you.
 
-1. OpenShift Cluster with Bare Metal Worker and ODF installed
+1. OpenShift Cluster with Bare Metal Worker(s) with usable storage (RWX)
 
 2. OpenShift GitOps
 
@@ -18,13 +17,14 @@ I actually used that cluster myself to develop a lot of this content.
 5. Download Windows ISO,
 either [Windows Server 2019](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019)
 or [Windows 10](https://www.microsoft.com/en-us/software-download/windows10ISO)
+or [Windows 11](https://www.microsoft.com/en-us/software-download/windows11)
 
 ## Setup
 
 1. Fork the [Windows Repo](https://github.com/jkeam/ocp-virt-windows-gitops)
 
-2. Create a GitHub Personal Access Token (PAT) for it,
-giving permissions to commit changes
+2. Create a GitHub Personal Access Token (PAT) for that fork,
+giving permissions to commit changes to the repo above
 
 3. Update `./argocd/secret.yaml` with your PAT information
 
@@ -32,6 +32,7 @@ giving permissions to commit changes
 
     ```shell
     oc new-project vms
+    oc new-project cluster-services
     ```
 
 ## HTTP Server
@@ -41,7 +42,7 @@ giving permissions to commit changes
     ```shell
     # argocd permissions
     oc adm policy add-cluster-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller
-    oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n httpd-server
+    oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n cluster-services
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n openshift-storage
 
     # scc
@@ -69,12 +70,12 @@ giving permissions to commit changes
 
     ```shell
     ISO_FILE=./win10.iso  # assuming iso is named win10.iso
-    POD_NAME=$(oc get pods --selector=app=httpd-server -o jsonpath='{.items[0].metadata.name}' -n httpd-server)
-    oc cp $ISO_FILE $POD_NAME:/opt/app-root/src -n httpd-server
+    POD_NAME=$(oc get pods --selector=app=cluster-services -o jsonpath='{.items[0].metadata.name}' -n cluster-services)
+    oc cp $ISO_FILE $POD_NAME:/opt/app-root/src -n cluster-services
     # wait ~10 min for completion
 
     # ISO link becomes
-    # http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
+    # http://httpd-server.cluster-services.svc.cluster.local:8080/win10.iso
     ```
 
 ## RHEL9 GitOps
@@ -131,7 +132,7 @@ create.
 5. Trigger the pipeline, setting `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params first
 
     ```shell
-    # WIN_IMAGE_DL_URL: http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
+    # WIN_IMAGE_DL_URL: http://httpd-server.cluster-services.svc.cluster.local:8080/win10.iso
     # GIT_REPOSITORY: https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git
     oc create -f ./pipeline/windows10-pipelinerun.yaml
     # wait ~30min for completion
@@ -161,7 +162,7 @@ and see the PVC on line 21 matches
 2. Trigger the pipeline, making sure `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params are set
 
     ```shell
-    # WIN_IMAGE_DL_URL: http://httpd-server.httpd-server.svc.cluster.local:8080/win10.iso
+    # WIN_IMAGE_DL_URL: http://cluster-services.cluster-services.svc.cluster.local:8080/win10.iso
     # GIT_REPOSITORY: https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git
     oc create -f ./pipeline/windows10-pipelinerun.yaml
     # wait ~30min for completion

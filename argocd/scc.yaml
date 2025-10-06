@@ -2,7 +2,7 @@ apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
   name: httpd-scc
-  namespace: httpd-server
+  namespace: cluster-services
 allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: false

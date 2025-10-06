@@ -7,13 +7,13 @@ metadata:
   namespace: openshift-gitops
 spec:
   destination:
-    namespace: httpd-server
+    namespace: cluster-services
     server: https://kubernetes.default.svc
   project: default
   source:
     path: httpd-server/overlays/default
-    repoURL: https://github.com/jkeam/kubevirt-gitops.git
-    targetRevision: odf
+    repoURL: https://github.com/jkeam/ocp-virt.git
+    targetRevision: main
   syncPolicy:
     automated: {}
     syncOptions:
