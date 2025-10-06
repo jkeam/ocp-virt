@@ -70,7 +70,7 @@ giving permissions to commit changes to the repo above
 
     ```shell
     ISO_FILE=./win10.iso  # assuming iso is named win10.iso
-    POD_NAME=$(oc get pods --selector=app=cluster-services -o jsonpath='{.items[0].metadata.name}' -n cluster-services)
+    POD_NAME=$(oc get pods --selector=app=httpd-server -o jsonpath='{.items[0].metadata.name}' -n cluster-services)
     oc cp $ISO_FILE $POD_NAME:/opt/app-root/src -n cluster-services
     # wait ~10 min for completion
 
