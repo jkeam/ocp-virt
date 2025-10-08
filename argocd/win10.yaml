@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  name: win10
+  namespace: openshift-gitops
+spec:
+  destination:
+    namespace: vms
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: vms/win10
+    repoURL: https://github.com/jkeam/ocp-virt.git

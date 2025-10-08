@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+    generateName: windows11-installer-run-
+    namespace: vms
+spec:
+    params:
+    -   name: winImageDownloadURL
+        value: http://httpd-server.cluster-services.svc.cluster.local:8080/Win11_25H2_English_x64.iso
+    -   name: acceptEula
+        value: true
+    -   name: autounattendXMLConfigMapsURL
+        value: https://raw.githubusercontent.com/kubevirt/kubevirt-tekton-tasks/main/release/pipelines/windows-efi-installer/configmaps/windows-efi-installer-configmaps.yaml
+    -   name: autounattendConfigMapName
+        value: windows11-autounattend
+    pipelineRef:
+        params:
+        -   name: catalog
+            value: redhat-pipelines
+        -   name: type
+            value: artifact
+        -   name: kind
+            value: pipeline
+        -   name: name
+            value: windows-efi-installer
+        -   name: version
+            value: v4.19.9
+        resolver: hub
+    taskRunSpecs:
+    -   pipelineTaskName: modify-windows-iso-file

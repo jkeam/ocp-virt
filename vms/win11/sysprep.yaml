@@ -1,0 +1,51 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: win11-sysprep
+data:
+  autounattend.xml: ''
+  unattend.xml: |-
+    <?xml version="1.0" encoding="utf-8"?>
+    <unattend
+        xmlns="urn:schemas-microsoft-com:unattend">
+        <settings pass="specialize">
+         <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+             <ExtendOSPartition>
+                 <Extend>true</Extend>
+             </ExtendOSPartition>
+         </component>
+        </settings>
+        <settings pass="oobeSystem">
+         <component
+             xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+             <OOBE>
+                 <HideEULAPage>true</HideEULAPage>
+                 <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+                 <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+                 <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                 <NetworkLocation>Work</NetworkLocation>
+                 <SkipUserOOBE>true</SkipUserOOBE>
+                 <SkipMachineOOBE>true</SkipMachineOOBE>
+                 <ProtectYourPC>3</ProtectYourPC>
+             </OOBE>
+             <AutoLogon>
+                 <Password>
+                     <Value>123456</Value>
+                     <PlainText>true</PlainText>
+                 </Password>
+                 <Enabled>true</Enabled>
+                 <Username>Administrator</Username>
+             </AutoLogon>
+             <UserAccounts>
+                 <AdministratorPassword>
+                     <Value>123456</Value>
+                     <PlainText>true</PlainText>
+                 </AdministratorPassword>
+             </UserAccounts>
+             <RegisteredOrganization/>
+             <RegisteredOwner/>
+             <TimeZone>Eastern Standard Time</TimeZone>
+         </component>
+        </settings>
+    </unattend>

@@ -3,7 +3,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
-  name: windows-vms
+  name: win11
   namespace: openshift-gitops
 spec:
   destination:
@@ -11,6 +11,5 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: windows
-    repoURL: https://github.com/YOUR_NAME/ocp-virt-windows-gitops
-    targetRevision: main
+    path: vms/win11
+    repoURL: https://github.com/jkeam/ocp-virt.git

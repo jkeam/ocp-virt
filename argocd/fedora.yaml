@@ -3,7 +3,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
-  name: vms
+  name: fedora
   namespace: openshift-gitops
 spec:
   destination:
@@ -11,10 +11,5 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: vms/overlays/openshift
-    repoURL: https://github.com/jkeam/kubevirt-gitops.git
-    targetRevision: odf
-  syncPolicy:
-    automated: {}
-    syncOptions:
-    - CreateNamespace=true
+    path: vms/fedora
+    repoURL: https://github.com/jkeam/ocp-virt.git

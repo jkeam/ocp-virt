@@ -1,0 +1,56 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: win10
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: win10-volume
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: win10
+          namespace: vms
+        storage:
+          resources:
+            requests:
+              storage: '21474836480'
+  instancetype:
+    kind: virtualmachineclusterinstancetype
+    name: u1.large
+  preference:
+    kind: VirtualMachineClusterPreference
+    name: windows.10.virtio
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        network.kubevirt.io/headlessService: headless
+    spec:
+      architecture: amd64
+      domain:
+        devices:
+          autoattachPodInterface: false
+          disks:
+            - cdrom:
+                bus: sata
+              name: sysprep
+          interfaces:
+            - macAddress: '02:bd:eb:00:00:20'
+              masquerade: {}
+              name: default
+        machine:
+          type: pc-q35-rhel9.4.0
+        resources: {}
+      networks:
+        - name: default
+          pod: {}
+      subdomain: headless
+      volumes:
+        - dataVolume:
+            name: win10-volume
+          name: rootdisk
+        - name: sysprep
+          sysprep:
+            configMap:
+              name: win10-sysprep

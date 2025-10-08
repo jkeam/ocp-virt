@@ -21,18 +21,18 @@ or [Windows 11](https://www.microsoft.com/en-us/software-download/windows11)
 
 ## Setup
 
-1. Fork the [Windows Repo](https://github.com/jkeam/ocp-virt-windows-gitops)
+1. Fork this repo
 
 2. Create a GitHub Personal Access Token (PAT) for that fork,
 giving permissions to commit changes to the repo above
 
 3. Update `./argocd/secret.yaml` with your PAT information
 
-4. Create namespace where VMs will go
+4. Create namespace where VMs and the HTTP Server will go
 
     ```shell
-    oc new-project vms
     oc new-project cluster-services
+    oc new-project vms
     ```
 
 ## HTTP Server
@@ -43,6 +43,7 @@ giving permissions to commit changes to the repo above
     # argocd permissions
     oc adm policy add-cluster-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n cluster-services
+    oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n vms
     oc adm policy add-role-to-user admin system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller -n openshift-storage
 
     # scc
@@ -66,40 +67,33 @@ giving permissions to commit changes to the repo above
     # wait ~10 min for completion
     ```
 
-4. Upload ISO to httpd server
+4. Upload ISOs to httpd server
 
     ```shell
-    ISO_FILE=./win10.iso  # assuming iso is named win10.iso
+    ISO_FILE=./Win10_22H2_English_x64v1.iso
     POD_NAME=$(oc get pods --selector=app=httpd-server -o jsonpath='{.items[0].metadata.name}' -n cluster-services)
     oc cp $ISO_FILE $POD_NAME:/opt/app-root/src -n cluster-services
     # wait ~10 min for completion
-
     # ISO link becomes
-    # http://httpd-server.cluster-services.svc.cluster.local:8080/win10.iso
+    #   http://httpd-server.cluster-services.svc.cluster.local:8080/Win10_22H2_English_x64v1.iso
+
+    ISO_FILE=./Win11_25H2_English_x64.iso
+    POD_NAME=$(oc get pods --selector=app=httpd-server -o jsonpath='{.items[0].metadata.name}' -n cluster-services)
+    oc cp $ISO_FILE $POD_NAME:/opt/app-root/src -n cluster-services
+    # wait ~10 min for completion
+    # ISO link becomes
+    #   http://httpd-server.cluster-services.svc.cluster.local:8080/Win11_25H2_English_x64.iso
     ```
 
-5. Create DataVolumes
+## Fedora GitOps
 
-    ```shell
-    # update ./datavolumes/win10source.yaml with your Win10 iso name
-    oc create -f ./datavolumes/win10source.yaml -n vms
-    # update ./datavolumes/win11source.yaml with your Win11 iso name
-    oc create -f ./datavolumes/win11source.yaml -n vms
-    ```
-
-## RHEL9 GitOps
-
-There is no pipeline for this yet, but we can demonstrate using ArgoCD to
-create a RHEL VM.
+Using ArgoCD to spin up a new Fedora VM.
 
 ```shell
-oc create -f ./argocd/vms-app.yaml
+oc create -f ./argocd/fedora.yaml
 # project: vms
 # login username: redhat
-# login password: 8etj2bea5fJ9
-# also check secret/authorized-keys for ssh key for passwordless login
-  # currently set to my public key
-  # https://github.com/jkeam/kubevirt-gitops/blob/odf/vms/base/secret.yaml
+# login password: pxlh-pusf-qmte
 ```
 
 ## Pipeline
@@ -108,78 +102,70 @@ We will now setup a pipeline that can build a Windows Golden Image
 in the form of a PVC that can be cloned for every new VM we want to
 create.
 
-1. Configure GitOps RBAC
+Make sure NOT to run these pipelines at the same time.
+The cleanup and termination of one pipelinerun will delete the resources
+used by another concurrent pipelinerun as they name the configmaps the same.
 
-    ```shell
-    git clone git@github.com:OOsemka/gitops-acm1.git
-    cd ./gitops-acm1/components/operators/openshift-gitops/instance/overlays/default
-    oc create -k .  # after done, cd back to the ocp-virt repo home
-    ```
+### Windows 10
 
-2. Create configmap for auto unattended config
+```shell
+oc create -f ./pipeline/win10-pipelinerun.yaml
+# wait 30min for completion
+```
 
-    ```shell
-    oc create -f ./configmaps/windows10autounattend.yaml
-    ```
+### Windows 11
 
-3. Create pipeline tasks
-
-    ```shell
-    VERSION=$(curl -s https://api.github.com/repos/kubevirt/kubevirt-tekton-tasks/releases | jq '.[] | select(.prerelease==false) | .tag_name' | sort -V | tail -n1 | tr -d '"')
-    oc apply -f "https://github.com/kubevirt/kubevirt-tekton-tasks/releases/download/${VERSION}/kubevirt-tekton-tasks.yaml"
-
-    # custom task
-    oc create -f ./pipeline/git-update-deployment-task.yaml
-    ```
-
-4. Create pipeline
-
-    ```shell
-    oc apply -f ./pipeline/windows10-pipeline.yaml
-    ```
-
-5. Trigger the pipeline, setting `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params first
-
-    ```shell
-    # WIN_IMAGE_DL_URL: http://httpd-server.cluster-services.svc.cluster.local:8080/win10.iso
-    # GIT_REPOSITORY: https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git
-    oc create -f ./pipeline/windows10-pipelinerun.yaml
-    # wait ~30min for completion
-    ```
-
-6. Check to see a PVC named `windows-10-base-xxxx` was created
-
-7. Check the repo at
-`https://github.com/YOUR_NAME/ocp-virt-windows-gitops/blob/main/windows/patch.yaml`
-and see the PVC on line 21 matches
+```shell
+oc create -f ./pipeline/win11-pipelinerun.yaml
+# wait 30min for completion
+```
 
 ## Windows GitOps
 
-1. Create the ArgoCD Application, setting the `repoURL` first
+1. Create the ArgoCD Application for the VM you want
 
     ```shell
-    # repoURL: https://github.com/YOUR_NAME/ocp-virt-windows-gitops
-    oc create -f ./argocd/windows-vms-app.yaml
+    # for windows 10 vm
+    oc create -f ./argocd/win10.yaml
+
+    # for windows 11 vm
+    oc create -f ./argocd/win11.yaml
     ```
 
-2. Use OCP Web Console to login as `Administrator` and password `changepassword`
+2. Use OCP Web Console to log into the Windows VM as `Administrator` and password `password` for win10 and `123456` for win11.
 
-## Stamping out New Windows Images
+## Modify VM Config
 
-1. Make some changes to the Windows Golden Image in the `configmap/windows-10-autounattend`
+You can modify the `sysprep.yaml` and/or `vm.yaml` files in the `vm/vm10` and `vm/vm11` dirs.
 
-2. Trigger the pipeline, making sure `WIN_IMAGE_DL_URL` and `GIT_REPOSITORY` params are set
+## Stamping out New Golden Images
+
+1. Copy this [file](https://raw.githubusercontent.com/kubevirt/kubevirt-tekton-tasks/main/release/pipelines/windows-efi-installer/configmaps/windows-efi-installer-configmaps.yaml)
+
+2. Add a new sysprep configmap into that file and keep note of the name of your new configmap, for example `customsysprep`
+
+3. Find a place, like GitHub, to host that file, for example `https://gist.githubusercontent.com/YOURNAME/SOMEHASH/raw/SOMEHASH/windows-efi-installer-configmaps.yaml`
+
+4. In `pipeline/win10-pipelinerun.yaml` if you want to update the Win10 golden image or `pipeline/win11-pipelinerun.yaml` if you want to update the Win11 golden image, update the following
+
+    ```yaml
+    - name: autounattendXMLConfigMapsURL
+      value: https://gist.githubusercontent.com/YOURNAME/SOMEHASH/raw/SOMEHASH/windows-efi-installer-configmaps.yaml
+    - name: autounattendConfigMapName
+      value: customsysprep
+    ```
+
+5. Run the pipeline(s)
 
     ```shell
-    # WIN_IMAGE_DL_URL: http://cluster-services.cluster-services.svc.cluster.local:8080/win10.iso
-    # GIT_REPOSITORY: https://github.com/YOUR_NAME/ocp-virt-windows-gitops.git
-    oc create -f ./pipeline/windows10-pipelinerun.yaml
-    # wait ~30min for completion
+    # for a new win10 golden image
+    oc create -f ./pipeline/win10-pipelinerun.yaml
+    # wait 30min for completion
+
+    # for a new win11 golden image
+    oc create -f ./pipeline/win11-pipelinerun.yaml
+    # wait 30min for completion
     ```
-
-3. Stop and destroy currently running VM `windows-10-vm`, wait a few min for completion
-
-4. Manually `Sync` in ArgoCD to create new VM off new golden image
 
 ## Links
 
@@ -193,4 +179,10 @@ and see the PVC on line 21 matches
 
 5. [Execute in VM](https://kubevirt.io/user-guide/virtual_machines/tekton_tasks/#execute-commands-in-virtual-machines)
 
-6. [Windows Server 2019 ISO](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019) - If you use this, you will need a new auto unattended.xml file as the one in this demo only works with Windows 10
+6. [PipelineRuns](https://artifacthub.io/packages/tekton-pipeline/redhat-pipelines/windows-efi-installer#how-to-run)
+
+7. [Example ConfigMaps](https://github.com/kubevirt/kubevirt-tekton-tasks/blob/main/release/pipelines/windows-customize/configmaps/windows-customize-configmaps.yaml)
+
+8. [Blog Golden Image 2024](https://developers.redhat.com/articles/2024/09/09/create-windows-golden-image-openshift-virtualization#customize_the_installation_process)
+
+9. [Blog Golden Image 2025](https://developers.redhat.com/articles/2025/08/12/windows-image-building-service-openshift-virtualization)

@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+    generateName: windows10-installer-run-
+    namespace: vms
+spec:
+    params:
+    -   name: winImageDownloadURL
+        value: http://httpd-server.cluster-services.svc.cluster.local:8080/Win10_22H2_English_x64v1.iso
+    -   name: acceptEula
+        value: true
+    -   name: preferenceName
+        value: windows.10.virtio
+    -   name: autounattendXMLConfigMapsURL
+        value: https://raw.githubusercontent.com/kubevirt/kubevirt-tekton-tasks/main/release/pipelines/windows-efi-installer/configmaps/windows-efi-installer-configmaps.yaml
+    -   name: autounattendConfigMapName
+        value: windows10-efi-autounattend
+    -   name: baseDvName
+        value: win10
+    -   name: isoDVName
+        value: win10
+    pipelineRef:
+        params:
+        -   name: catalog
+            value: redhat-pipelines
+        -   name: type
+            value: artifact
+        -   name: kind
+            value: pipeline
+        -   name: name
+            value: windows-efi-installer
+        -   name: version
+            value: v4.19.9
+        resolver: hub
+    taskRunSpecs:
+    -   pipelineTaskName: modify-windows-iso-file
+    timeout: 1h0m0s
