@@ -63,6 +63,7 @@ giving permissions to commit changes to the repo above
 3. Create App
 
     ```shell
+    # update the git repo to your fork
     oc create -f ./argocd/httpd-app.yaml
     # wait ~10 min for completion
     ```
@@ -90,6 +91,7 @@ giving permissions to commit changes to the repo above
 Using ArgoCD to spin up a new Fedora VM.
 
 ```shell
+# update the git repo to your fork
 oc create -f ./argocd/fedora.yaml
 # project: vms
 # login username: redhat
@@ -126,9 +128,11 @@ oc create -f ./pipeline/win11-pipelinerun.yaml
 
     ```shell
     # for windows 10 vm
+    # update the git repo to your fork
     oc create -f ./argocd/win10.yaml
 
     # for windows 11 vm
+    # update the git repo to your fork
     oc create -f ./argocd/win11.yaml
     ```
 
